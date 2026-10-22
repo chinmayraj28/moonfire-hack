@@ -89,7 +89,7 @@ If you edit `project.yml`, regenerate the project with `xcodegen generate`.
 | ⌥-click her bubble | Asks the **base** model instead, for the side-by-side |
 | ⌘⇧S | Prefer scripted lines (safe mode if the model misbehaves) |
 | Demo › She Replies Automatically | On by default: she answers every text you send |
-| ↺ or ⌘⇧R | Reset the demo |
+| ↺ or ⌘⇧R | Reset: Sophie's chat empties and she opens with a brand new text from Claude |
 
 Launch with `-autoplay` (add `-reply`) to rehearse hands-free.
 

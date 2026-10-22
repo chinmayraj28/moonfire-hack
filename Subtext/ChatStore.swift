@@ -59,8 +59,9 @@ final class ChatStore {
     }
 
     // She answers his last text straight away: Claude writes it live, or the next scripted line if it can't.
-    private func herRespond() {
-        guard autoReply, !herTyping else { return }
+    // A reset always gets a fresh opener (force), even with automatic replies switched off.
+    private func herRespond(force: Bool = false) {
+        guard autoReply || force, !herTyping else { return }
         herTyping = true
         let run = epoch
         Task { @MainActor in
@@ -178,6 +179,7 @@ final class ChatStore {
 
     // Launch with -autoplay to run the opening beat hands-free: she texts; add -reply and he answers twice.
     func autoplayIfAsked() async {
+        if CommandLine.arguments.contains("-reset") { reset() }   // start fresh, exactly as the reset button does
         guard CommandLine.arguments.contains("-autoplay") else { return }
         try? await Task.sleep(for: .seconds(1))
         herNext()
@@ -202,6 +204,11 @@ final class ChatStore {
         epoch += 1
         ripple = nil
         conversations = Seed.conversations()
+        // Sophie starts from nothing: her only message will be the fresh one Claude writes.
+        if let i = conversations.firstIndex(where: { $0.id == Seed.herID }) {
+            conversations[i].messages = []
+            conversations[i].openedAt = .now
+        }
         script = Seed.herScript
         interruptions = Seed.interruptions
         sentToHer = 0
@@ -209,6 +216,13 @@ final class ChatStore {
         herTyping = false
         draft = ""
         selectedID = Seed.herID
+        // A beat after the reset, Sophie starts a brand new conversation, written live.
+        let run = epoch
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(700))
+            guard run == epoch else { return }
+            herRespond(force: true)
+        }
     }
 
     private func append(_ message: Message, to convID: String) {

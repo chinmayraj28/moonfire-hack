@@ -35,7 +35,9 @@ final class Her {
             "model": model,
             "max_tokens": 4000,
             "system": HerPrompt.system(hiding: agenda.hide),
-            "messages": [["role": "user", "content": "The chat so far:\n\(transcript)\n\nWrite your next text."]],
+            "messages": [["role": "user", "content": history.isEmpty
+                ? "You haven't texted him yet today. Write your first text to him."
+                : "The chat so far:\n\(transcript)\n\nWrite your next text."]],
             "output_config": ["effort": "low"],
             "fallbacks": "default",
         ]

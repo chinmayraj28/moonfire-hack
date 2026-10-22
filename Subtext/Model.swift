@@ -33,8 +33,9 @@ struct Conversation: Identifiable {
     var avatar: [Color]
     var messages: [Message]
     var unread = false
+    var openedAt = Date.distantPast   // keeps an empty, just-reset chat at the top of the list
 
-    var lastTime: Date { messages.last?.time ?? .distantPast }
+    var lastTime: Date { messages.last?.time ?? openedAt }
     var preview: String { messages.last?.sentText ?? "" }
     var timeLabel: String { Fmt.listTime(lastTime) }
 }
