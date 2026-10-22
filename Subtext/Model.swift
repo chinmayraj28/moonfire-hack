@@ -51,16 +51,15 @@ struct Interruption {
     let decode: String
 }
 
-// One running decode or cool transition.
+// One running decode or cool transition: a 3D flip with the text swapped edge-on.
 struct FX {
     var start: Date
     var swapAt: Date?
     var toAlt: Bool
     var tint: Color
 
-    static let charge = 0.18   // tremble and glow before the burst
-    static let rampIn = 0.55   // fully blown apart; the text swaps here
-    static let rampOut = 0.95  // reassemble while the new text decrypts
+    static let rampIn = 0.42   // turn away to edge-on, melting into the new colour
+    static let rampOut = 0.85  // swing back round with an overshoot while the text decrypts
 }
 
 // The shockwave that rolls through the chat from a decode click.
@@ -70,10 +69,11 @@ struct Ripple {
 }
 
 struct FXState {
-    var progress = 0.0
+    var angle = 0.0    // degrees around the vertical axis
+    var wobble = 0.0   // jelly morph and glow, strongest edge-on
+    var morph = 0.0    // colour blend towards the new bubble, first half only
     var time = 0.0
     var reveal = 1.0
-    var shake = 0.0
     var showAlt: Bool
 
     init(_ fx: FX?, now: Date, showingAlt: Bool) {
@@ -82,21 +82,22 @@ struct FXState {
         if let swap = fx.swapAt, now >= swap {
             showAlt = fx.toAlt
             let t = min(1, now.timeIntervalSince(swap) / FX.rampOut)
-            progress = 1 - Self.ease(t)
-            reveal = t
+            angle = -90 * (1 - Self.easeOutBack(t))
+            wobble = (1 - t) * (1 - t)
+            reveal = min(1, t * 1.5)
         } else {
             showAlt = showingAlt
-            if time < FX.charge {
-                shake = time / FX.charge
-            } else if time < FX.rampIn {
-                progress = Self.ease((time - FX.charge) / (FX.rampIn - FX.charge))
-            } else {
-                progress = 0.92 + 0.08 * sin((time - FX.rampIn) * 7)   // hover while the model thinks
-            }
+            let t = min(1, time / FX.rampIn)
+            angle = time < FX.rampIn ? 90 * t * t : 82 + 6 * sin((time - FX.rampIn) * 9)  // hover while the model thinks
+            wobble = t
+            morph = t
         }
     }
 
-    static func ease(_ t: Double) -> Double { t < 0.5 ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2 }
+    static func easeOutBack(_ t: Double) -> Double {
+        let c1 = 1.70158, c3 = c1 + 1
+        return 1 + c3 * pow(t - 1, 3) + c1 * pow(t - 1, 2)
+    }
 }
 
 // Hacker-film decryption: unrevealed characters flicker through random glyphs.

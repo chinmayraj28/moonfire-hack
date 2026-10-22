@@ -208,7 +208,6 @@ struct ChatHeader: View {
 }
 
 struct MessageRow: View {
-    static let burst: CGFloat = 135   // transparent room around a bubble for its fragments to fly into
     @Environment(ChatStore.self) private var store
     let message: Message
     let convID: String
@@ -225,17 +224,10 @@ struct MessageRow: View {
                     let state = FXState(fx, now: timeline.date, showingAlt: message.showingAlt)
                     let style = bubbleStyle(alt: state.showAlt)
                     let full = state.showAlt ? (message.alt ?? message.text) : message.text
-                    let tint = fx?.tint ?? .clear
-                    let glow = max(state.progress, state.shake * 0.6)
-                    BubbleView(text: state.reveal < 1 ? Scramble.text(full, revealed: state.reveal, seed: Int(state.time * 24)) : full,
-                               fill: style.fill, textColor: style.text, fromMe: message.fromMe, tail: tail)
-                        .modifier(SheenEffect(on: state.showAlt && !message.fromMe && !message.altIsBase && fx == nil))
-                        .padding(Self.burst)
-                        .modifier(ShatterEffect(progress: state.progress, time: state.time, tint: tint))
-                        .shadow(color: tint.opacity(0.85 * glow), radius: 22 * glow)
-                        .padding(-Self.burst)
-                        .offset(x: sin(state.time * 95) * 3 * state.shake)
-                        .scaleEffect(1 + 0.04 * glow)
+                    AnimatedBubble(text: state.reveal < 1 ? Scramble.text(full, revealed: state.reveal, seed: Int(state.time * 24)) : full,
+                                   fill: style.fill, textColor: style.text, nextFill: fx.map { bubbleStyle(alt: $0.toAlt).fill },
+                                   fromMe: message.fromMe, tail: tail, state: state, tint: fx?.tint ?? .clear,
+                                   sheen: state.showAlt && !message.fromMe && !message.altIsBase && fx == nil)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture(coordinateSpace: .named("chat")) { location in
@@ -288,6 +280,8 @@ struct BubbleView: View {
     let textColor: Color
     let fromMe: Bool
     let tail: Bool
+    var nextFill: AnyShapeStyle? = nil   // the colour it is melting into mid-flip
+    var morph = 0.0
 
     var body: some View {
         Text(text)
@@ -298,8 +292,42 @@ struct BubbleView: View {
             .padding(.vertical, 7)
             .padding(.horizontal, 12)
             .padding(fromMe ? .trailing : .leading, BubbleShape.tailSpace)
-            .background(BubbleShape(fromMe: fromMe, tail: tail).fill(fill))
+            .background {
+                ZStack {
+                    BubbleShape(fromMe: fromMe, tail: tail).fill(fill)
+                    if let nextFill, morph > 0 {
+                        BubbleShape(fromMe: fromMe, tail: tail).fill(nextFill).opacity(morph)
+                    }
+                }
+            }
             .frame(maxWidth: 460, alignment: fromMe ? .trailing : .leading)
+    }
+}
+
+// A bubble mid-decode: it turns away in 3D, melts into the new colour and goes to jelly, then the
+// text swaps edge-on and it swings back round with an overshoot.
+struct AnimatedBubble: View {
+    static let room: CGFloat = 40   // transparent margin so the jelly and glow aren't clipped
+    let text: String
+    let fill: AnyShapeStyle
+    let textColor: Color
+    let nextFill: AnyShapeStyle?
+    let fromMe: Bool
+    let tail: Bool
+    let state: FXState
+    let tint: Color
+    let sheen: Bool
+
+    var body: some View {
+        BubbleView(text: text, fill: fill, textColor: textColor, fromMe: fromMe, tail: tail,
+                   nextFill: nextFill, morph: state.morph)
+            .modifier(SheenEffect(on: sheen))
+            .padding(Self.room)
+            .modifier(MorphEffect(amount: state.wobble, time: state.time))
+            .shadow(color: tint.opacity(0.8 * state.wobble), radius: 20 * state.wobble)
+            .padding(-Self.room)
+            .rotation3DEffect(.degrees(state.angle), axis: (x: 0.1, y: 1, z: 0), perspective: 0.5)
+            .scaleEffect(1 + 0.06 * state.wobble)
     }
 }
 
@@ -387,17 +415,16 @@ struct Composer: View {
 
 // MARK: Metal effects
 
-struct ShatterEffect: ViewModifier {
-    var progress: Double
+struct MorphEffect: ViewModifier {
+    var amount: Double
     var time: Double
-    var tint: Color
 
     func body(content: Content) -> some View {
         content.visualEffect { view, proxy in
-            view.layerEffect(
-                ShaderLibrary.subtextShatter(.float2(proxy.size), .float(progress), .float(time), .color(tint)),
-                maxSampleOffset: CGSize(width: 130, height: 130),
-                isEnabled: progress > 0.001)
+            view.distortionEffect(
+                ShaderLibrary.subtextMorph(.float2(proxy.size), .float(amount), .float(time)),
+                maxSampleOffset: CGSize(width: 80, height: 40),
+                isEnabled: amount > 0.001)
         }
     }
 }
@@ -409,7 +436,7 @@ struct RippleEffect: ViewModifier {
     func body(content: Content) -> some View {
         let t = ripple.map { now.timeIntervalSince($0.start) } ?? 0
         content.layerEffect(
-            ShaderLibrary.subtextRipple(.float2(ripple?.origin ?? .zero), .float(t), .float(14), .float(15),
+            ShaderLibrary.subtextRipple(.float2(ripple?.origin ?? .zero), .float(t), .float(9), .float(15),
                                         .float(5.5), .float(1100), .color(Theme.decodeTint)),
             maxSampleOffset: CGSize(width: 20, height: 20),
             isEnabled: ripple != nil && t < 1.8)

@@ -2,7 +2,7 @@
 import AppKit
 import SwiftUI
 
-// Renders the decode burst frame by frame without a screen, for tuning the shaders:
+// Renders the decode flip frame by frame without a screen, for tuning the shaders:
 //   Subtext.app/Contents/MacOS/Subtext -renderfx /some/folder
 @MainActor
 enum FXPreview {
@@ -12,19 +12,19 @@ enum FXPreview {
         let dir = args[i + 1]
         let literal = "Hey great day at the beach today. I was wondering if you'd like to meet my best friend tomorrow 🙂"
         let decoded = "She likes you and trusts you enough to meet her best friend. The best friend is HR and this is your final interview. Don't fuck this up."
-        // (phase, progress, reveal): burst out on the blue bubble, back in on the purple one.
-        let frames: [(Bool, Double, Double)] = [(false, 0.0, 1), (false, 0.2, 1), (false, 0.45, 1), (false, 0.75, 1), (false, 1.0, 1),
-                                                (true, 0.8, 0.2), (true, 0.5, 0.5), (true, 0.2, 0.8), (true, 0.0, 1)]
-        for (n, frame) in frames.enumerated() {
-            let (alt, progress, reveal) = frame
-            let full = alt ? decoded : literal
-            let view = BubbleView(text: reveal < 1 ? Scramble.text(full, revealed: reveal, seed: n * 7) : full,
-                                  fill: alt ? AnyShapeStyle(Theme.purple) : AnyShapeStyle(Theme.blue),
-                                  textColor: .white, fromMe: false, tail: true)
+        // Times through one decode (seconds from the click); the swap happens at rampIn.
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        let times = [0.0, 0.15, 0.3, 0.4, 0.5, 0.65, 0.85, 1.1, 1.4]
+        for (n, t) in times.enumerated() {
+            let fx = FX(start: start, swapAt: start.addingTimeInterval(FX.rampIn), toAlt: true, tint: Theme.decodeTint)
+            let state = FXState(fx, now: start.addingTimeInterval(t), showingAlt: false)
+            let full = state.showAlt ? decoded : literal
+            let view = AnimatedBubble(text: state.reveal < 1 ? Scramble.text(full, revealed: state.reveal, seed: n * 7) : full,
+                                      fill: state.showAlt ? AnyShapeStyle(Theme.purple) : AnyShapeStyle(Theme.blue),
+                                      textColor: .white, nextFill: AnyShapeStyle(Theme.purple), fromMe: false, tail: true,
+                                      state: state, tint: Theme.decodeTint, sheen: false)
                 .frame(width: 420)
-                .padding(MessageRow.burst)
-                .modifier(ShatterEffect(progress: progress, time: Double(n) * 0.12, tint: Theme.decodeTint))
-                .shadow(color: Theme.decodeTint.opacity(0.85 * progress), radius: 22 * progress)
+                .padding(60)
                 .background(Color(white: 0.12))
             let renderer = ImageRenderer(content: view)
             renderer.scale = 2

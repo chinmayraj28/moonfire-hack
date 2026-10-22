@@ -1,24 +1,24 @@
 import Foundation
 
-// Sophie's side of the chat, written live by Gemini. She plays the girlfriend for the demo;
+// Sophie's side of the chat, written live by Claude Sonnet 5.5. She plays the girlfriend for the demo;
 // the product itself (decode and play it cool) stays on the local fine-tuned model.
 //
-// Key:   defaults write com.owenbarnes.subtext GeminiAPIKey 'YOUR_KEY'   (or GEMINI_API_KEY)
-// Model: defaults write com.owenbarnes.subtext SubtextHerModel 'gemini-3.5-flash-lite'
+// Key:   defaults write com.owenbarnes.subtext AnthropicAPIKey 'sk-ant-...'   (or ANTHROPIC_API_KEY)
+// Model: defaults write com.owenbarnes.subtext SubtextHerModel 'claude-sonnet-5-5'
 @MainActor
 final class Her {
     private var agendas = Agenda.all.shuffled()
 
     private var key: String? {
-        let key = ProcessInfo.processInfo.environment["GEMINI_API_KEY"]
-            ?? UserDefaults.standard.string(forKey: "GeminiAPIKey")
+        let key = ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"]
+            ?? UserDefaults.standard.string(forKey: "AnthropicAPIKey")
         return key?.isEmpty == false ? key : nil
     }
 
     private var model: String {
         ProcessInfo.processInfo.environment["SUBTEXT_HER_MODEL"]
             ?? UserDefaults.standard.string(forKey: "SubtextHerModel")
-            ?? "gemini-3.5-flash-lite"
+            ?? "claude-sonnet-5-5"
     }
 
     // Her next text, plus the line Subtext falls back to if the local model is offline.
@@ -30,42 +30,43 @@ final class Her {
         let transcript = history.suffix(16)
             .map { "\($0.fromMe ? "Him" : "You"): \($0.sentText)" }
             .joined(separator: "\n")
+        // No temperature: API version 2026-10-21 rejects sampling parameters. Low effort keeps her quick.
         let body: [String: Any] = [
-            "system_instruction": ["parts": [["text": HerPrompt.system(hiding: agenda.hide)]]],
-            "contents": [["role": "user", "parts": [["text": "The chat so far:\n\(transcript)\n\nWrite your next text."]]]],
-            "generationConfig": ["temperature": 1.0, "maxOutputTokens": 600],
+            "model": model,
+            "max_tokens": 4000,
+            "system": HerPrompt.system(hiding: agenda.hide),
+            "messages": [["role": "user", "content": "The chat so far:\n\(transcript)\n\nWrite your next text."]],
+            "output_config": ["effort": "low"],
+            "fallbacks": "default",
         ]
-        var request = URLRequest(url: URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent")!,
-                                 timeoutInterval: 20)
+        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!, timeoutInterval: 30)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(key, forHTTPHeaderField: "x-goog-api-key")
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.setValue(key, forHTTPHeaderField: "x-api-key")
+        request.setValue("2026-10-21", forHTTPHeaderField: "anthropic-version")
+        request.setValue("server-side-fallback-2026-07-01", forHTTPHeaderField: "anthropic-beta")
 
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
             let (data, response) = try await URLSession.shared.data(for: request)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-                print("Gemini:", String(data: data, encoding: .utf8) ?? "")
+                print("Claude:", String(data: data, encoding: .utf8) ?? "")
                 return nil
             }
             struct Reply: Decodable {
-                struct Candidate: Decodable {
-                    struct Content: Decodable {
-                        struct Part: Decodable { let text: String?; let thought: Bool? }
-                        let parts: [Part]?
-                    }
-                    let content: Content?
-                }
-                let candidates: [Candidate]?
+                struct Block: Decodable { let type: String; let text: String? }
+                let content: [Block]
+                let stop_reason: String?
             }
-            let parts = try JSONDecoder().decode(Reply.self, from: data).candidates?.first?.content?.parts ?? []
-            var text = parts.filter { $0.thought != true }.compactMap(\.text).joined()
+            let reply = try JSONDecoder().decode(Reply.self, from: data)
+            guard reply.stop_reason != "refusal" else { return nil }
+            var text = reply.content.filter { $0.type == "text" }.compactMap(\.text).joined()
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if text.hasPrefix("You:") { text = String(text.dropFirst(4)).trimmingCharacters(in: .whitespaces) }
             text = text.trimmingCharacters(in: CharacterSet(charactersIn: "\"“”"))
             return text.isEmpty ? nil : (text, agenda.decode)
         } catch {
-            print("Gemini:", error)
+            print("Claude:", error)
             return nil
         }
     }
