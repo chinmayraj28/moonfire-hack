@@ -45,9 +45,9 @@ for path in sorted(glob.glob(str(here / "raw" / "*.jsonl"))):
         if system not in (DECODE, COOL):
             dropped["unknown system prompt"] += 1
             continue
-        if "—" in user + answer:
+        if "\u2014" in user + answer:
             dashes += 1
-            user, answer = (s.replace(" — ", ", ").replace("—", ", ") for s in (user, answer))
+            user, answer = (s.replace(" \u2014 ", ", ").replace("\u2014", ", ") for s in (user, answer))
         if system == COOL:
             if len(answer.split()) > 12:
                 dropped["cool over 12 words"] += 1
