@@ -8,3 +8,6 @@ __pycache__/
 data/train.jsonl
 data/eval.jsonl
 data/compare.md
+Models/*
+!Models/.gitkeep
+logs/

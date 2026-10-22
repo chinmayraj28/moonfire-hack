@@ -33,22 +33,16 @@ defaults write com.owenbarnes.subtext GeminiAPIKey 'YOUR_KEY'
 
 It uses `gemini-3.5-flash-lite` (Google's fastest). Change it with `defaults write com.owenbarnes.subtext SubtextHerModel 'gemini-3.8-flash'`. With no key, she sends the next scripted line instead. Gemini only plays the girlfriend; decoding and playing it cool stay on the local model.
 
-## Connect the models
+## Drop in the model
 
-The app talks to any OpenAI-compatible local server: fine-tuned on port 8080, base on port 8081. With no server running, it quietly uses the scripted lines.
+Put the fine-tuned model in `Models/`, then run `./serve.sh` in a Terminal tab and leave it running. The app finds it on its own.
 
-```bash
-# Base model for the comparison (or the exact checkpoint the organisers gave you)
-llama-server -hf LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M --port 8081
+- **Straight from Halo:** copy the final checkpoint folder (the one with `config.json`, `model.safetensors` and the tokenizer files) to `Models/subtext/`. It's served with MLX (`uv tool install mlx-lm` once). If you trained a LoRA, merge it into the base first: Halo saves LoRA as an adapter only.
+- **Or a GGUF file:** `Models/subtext.gguf`, served with llama.cpp.
 
-# Fine-tuned: Halo saves a standard Hugging Face checkpoint. Easiest on a Mac is MLX:
-pip install mlx-lm
-mlx_lm.server --model path/to/checkpoint --port 8080
-```
+`serve.sh` also starts the base model on port 8081 for the side-by-side: `Models/base/` or `Models/base.gguf` if you add one, otherwise Liquid's LFM2.5-1.2B-Instruct GGUF, downloaded once. Logs go to `logs/`. With nothing running, the app quietly uses its scripted lines.
 
-Or convert it to GGUF with `convert_hf_to_gguf.py` from the llama.cpp repo, shrink it with `llama-quantize ... Q4_K_M`, and serve it with `llama-server -m subtext.gguf --port 8080`.
-
-Override in the Xcode scheme (Edit Scheme > Run > Environment) with `SUBTEXT_URL`, `SUBTEXT_BASE_URL`, `SUBTEXT_MODEL` (if the server needs a model name) and `SUBTEXT_LABEL` (the caption under decoded bubbles).
+Ports and names can be overridden in the Xcode scheme (Edit Scheme > Run > Environment): `SUBTEXT_URL`, `SUBTEXT_BASE_URL`, `SUBTEXT_MODEL` (if the server needs a model name) and `SUBTEXT_LABEL` (the caption under decoded bubbles).
 
 ## Training data
 
