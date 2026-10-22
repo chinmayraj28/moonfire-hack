@@ -11,7 +11,7 @@ Open `Subtext.xcodeproj` and press ⌘R (macOS 14 or later). Xcode needs its Met
 | Do this | What happens |
 |---|---|
 | ⌘→ | She sends her next scripted message (typing dots first) |
-| Click her bubble | Decode: Metal glitch into purple, "what she really means" |
+| Click her bubble | Decode: it shatters, a shockwave rolls through the chat, and it reassembles purple as "what she really means" |
 | Type and press Return | You send; it plays it cool automatically. Click to see what you nearly sent |
 | Type, then ⌥↩ | Sends your draft **as her**: let a judge write one live |
 | ⌥-click her bubble | Asks the **base** model instead, for the side-by-side |
