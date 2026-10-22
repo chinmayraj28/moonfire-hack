@@ -4,7 +4,7 @@
 
 ![Subtext: a Messages-style chat with Sophie, the Lads interrupting in the sidebar](docs/screenshot.png)
 
-Subtext is a fake iMessage for Mac. Her texts arrive looking completely normal. Click one and it shatters, a shockwave rolls through the chat, and it reassembles as a purple bubble that says what she *really* means. Your own over-eager replies get rewritten to play it cool before they "send".
+Subtext is a fake iMessage for Mac. Her texts arrive looking completely normal. Click one and it flips round in 3D, goes to jelly, melts purple and lands as a bubble that says what she *really* means. Your own over-eager replies get rewritten to play it cool before they "send".
 
 Both jobs run on a 1.2-billion-parameter model fine-tuned for exactly this, on the laptop, with no cloud calls.
 
@@ -18,11 +18,11 @@ Built in three hours at a London hackathon (22 October 2026). Every team got the
 
 ## The decode
 
-![The decode: a blue bubble shatters into purple tiles around a glowing core, then reassembles as the purple translation](docs/decode.png)
+![The decode: a blue bubble turns away in 3D, wobbles and melts purple, then swings back as the purple translation while the text decrypts](docs/decode.png)
 
 Custom Metal shaders on SwiftUI views (`Subtext/Shaders.metal`):
 
-- **Shatter:** the bubble breaks into tiles that swirl outward around a pulsing core, twinkle, and fly back in as the translation.
+- **Flip and morph:** the bubble turns away in 3D while a jelly distortion wobbles it and it melts purple; the text swaps edge-on, and it swings back with an overshoot while the words decrypt.
 - **Shockwave:** a ripple with RGB split rolls through the whole conversation from where you clicked.
 - **Sheen:** a slow light sweep keeps decoded bubbles alive.
 
@@ -39,7 +39,7 @@ The real iMessage sounds play throughout: the soft blip when she texts, the whoo
 >
 > **He sent:** awesome, see you at 2pm?
 
-Each job has its own system prompt, word for word the same in the app (`Subtext/Translator.swift`) and in the training data (`data/PROMPT.md`).
+The model we trained uses one system prompt for both jobs (`Prompts.trained` in `Subtext/Translator.swift`, copied from the checkpoint's `run_local.py`). It tells the jobs apart by how a message looks, so the app sends his drafts in capitals, as in its rewrite examples, and falls back to a rule-based line if a rewrite comes back as a decode. `data/PROMPT.md` writes two-prompt data for the next run; if you retrain with it, update `Prompts.trained` to match.
 
 **Why fine-tune?** An untuned small model reads her text as a message to answer, not to decode. In our first test, one replied to the best-friend text with "Oh, I'm all ears! Let's plan a beach date! 😊". The fine-tuned model learns the job, the voice, and the hard rules: the cool version never drops a time or invents a fact.
 
@@ -47,16 +47,16 @@ Each job has its own system prompt, word for word the same in the app (`Subtext/
 
 ```mermaid
 flowchart LR
-    S["Sophie<br/>(Gemini plays her)"] -- "long, over-explained texts" --> A["Subtext<br/>SwiftUI + Metal"]
+    S["Sophie<br/>(Claude Sonnet 5.5 plays her)"] -- "long, over-explained texts" --> A["Subtext<br/>SwiftUI + Metal"]
     Y["You"] -- "over-eager reply" --> A
     A -- "click: decode<br/>send: play it cool" --> T["Fine-tuned LFM2.5<br/>on this Mac, port 8080"]
     A -. "option-click: compare" .-> B["Base LFM2.5<br/>on this Mac, port 8081"]
 ```
 
 - **The product runs locally.** Decode and play it cool go to the fine-tuned model on `localhost`, through any OpenAI-compatible server (llama.cpp or MLX).
-- **Sophie is the test harness.** Gemini 3.5 Flash-Lite plays the girlfriend, so the demo has someone to talk to. Every reply is a 70 to 130 word over-explanation with one real meaning buried in the middle: she's free Saturday, she wants you to call, your reply was too short. There are eight buried meanings, in `Subtext/Her.swift`.
+- **Sophie is the test harness.** Claude Sonnet 5.5 plays the girlfriend, so the demo has someone to talk to. Every reply is a 70 to 130 word over-explanation with one real meaning buried in the middle: she's free Saturday, she wants you to call, your reply was too short. There are eight buried meanings, in `Subtext/Her.swift`.
 - **Everyone else interrupts.** After every second text you send Sophie, someone else chimes in: the Lads ("jake's birthday saturday. mandatory. no girlfriends"), Grandma in capitals, the ex ("u up? 👀"). Their chat jumps up the list with an unread dot; Sophie stays open. Click their texts to decode them too.
-- **It never breaks on stage.** With no model running, every message falls back to a scripted line written for it. With no Gemini key, Sophie sends her next scripted text.
+- **It never breaks on stage.** With no model running, every message falls back to a scripted line written for it. With no Anthropic key, Sophie sends her next scripted text.
 
 ## Run it
 
@@ -64,13 +64,13 @@ You need macOS 14 or later and Xcode.
 
 1. Open `Subtext.xcodeproj` and press ⌘R. If Xcode asks for its Metal toolchain, run `xcodebuild -downloadComponent MetalToolchain`.
 2. **Optional, the model:** put the fine-tuned model in `Models/` and run `./serve.sh` in a Terminal tab (details below).
-3. **Optional, Sophie live:** add a Gemini key once. It stays in your Mac's preferences, never in git:
+3. **Optional, Sophie live:** add an Anthropic API key once. It stays in your Mac's preferences, never in git:
 
 ```bash
-defaults write com.owenbarnes.subtext GeminiAPIKey 'YOUR_KEY'
+defaults write com.owenbarnes.subtext AnthropicAPIKey 'sk-ant-...'
 ```
 
-To use a different Gemini model: `defaults write com.owenbarnes.subtext SubtextHerModel 'gemini-3.8-flash'`.
+To use a different Claude model: `defaults write com.owenbarnes.subtext SubtextHerModel 'claude-opus-5-5'`.
 
 If you edit `project.yml`, regenerate the project with `xcodegen generate`.
 
@@ -79,7 +79,7 @@ If you edit `project.yml`, regenerate the project with `xcodegen generate`.
 | Do this | What happens |
 |---|---|
 | ⌘→ | Sophie sends her next scripted message (typing dots first) |
-| Click her bubble | Decode: shatter, shockwave, purple translation |
+| Click her bubble | Decode: 3D flip, jelly morph, purple translation |
 | Type and press Return | You send; it plays it cool automatically. Click it to see what you nearly sent 💀 |
 | Type, then ⌥↩ | Sends your draft **as her**, so a judge can write one live |
 | ⌥-click her bubble | Asks the **base** model instead, for the side-by-side |
@@ -125,10 +125,10 @@ The data rules keep it funny without being nasty:
 ```
 Subtext/
   Views.swift        the Messages look: sidebar, floating header, bubbles, composer
-  Shaders.metal      shatter, shockwave and sheen
+  Shaders.metal      morph, shockwave and sheen
   ChatStore.swift    conversation state, the demo flow, interruptions
-  Translator.swift   the local model client and the two system prompts
-  Her.swift          Sophie: the Gemini prompt and her eight buried meanings
+  Translator.swift   the local model client and the trained system prompt
+  Her.swift          Sophie: the Claude prompt and her eight buried meanings
   Model.swift        conversations, scripted lines and decodes
   Sounds.swift       the iMessage sounds
   Resources/         avatars
@@ -142,4 +142,4 @@ project.yml          XcodeGen spec for Subtext.xcodeproj
 
 - **Apple's sounds aren't in this repo.** The build copies the iMessage sounds from your Mac's iOS simulator runtime, and the decode sound is read from macOS itself. On a Mac without them, Subtext uses standard system sounds.
 - **The supporting cast is AI-generated.** Mum, the Lads, Gary the landlord and friends are made with GPT image generation. Replace any avatar by swapping `Subtext/Resources/<name>.jpg`.
-- **Everything stays on the Mac** except Sophie's own lines when a Gemini key is set.
+- **Everything stays on the Mac** except Sophie's own lines when an Anthropic key is set.
