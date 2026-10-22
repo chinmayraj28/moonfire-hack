@@ -1,25 +1,18 @@
 import Foundation
 import Observation
 
-// The fine-tuned model was trained with this one prompt for both jobs (see Models/subtext/run_local.py).
-// Whatever model sits in Models/subtext, send it exactly the prompt it was trained with.
+// The fine-tuned model was trained with these two prompts, word for word (data/PROMPT.md and
+// Models/subtext/run_local.py). Whatever model sits in Models/subtext, send it the prompts it learned.
 enum Prompts {
-    static let trained = """
-    You are an on-device relationship text translator with two jobs:
-    1. DECODE PARTNER TEXT: When given an indirect, subtle, or loaded text from a partner, explain what they actually mean in one blunt, perceptive wingman one-liner.
-    2. CHILL REWRITE DRAFT: When given an overly excited, all-caps, clingy, or anxious/overthinking draft message, rewrite it into a calm, nonchalant, grounded, and concise text ready to send.
-    """
+    static let decode = "You are Subtext. She sent him this text. Tell him what she really means in one or two short, funny lines of blunt Gen Z advice."
+    static let cool = "You are Play It Cool. Rewrite his over-eager text as a short, relaxed reply. Keep every fact, time, place and answer. Max 12 words."
 }
 
 enum Mode {
     case decode, cool
 
-    var system: String { Prompts.trained }
+    var system: String { self == .decode ? Prompts.decode : Prompts.cool }
     var temperature: Double { self == .decode ? 0.8 : 0.3 }
-
-    // The model picks its job from how a message looks; its rewrite examples were mostly
-    // all caps, so his drafts go in shouting.
-    func input(_ text: String) -> String { self == .cool ? text.uppercased() : text }
 }
 
 struct Translation {
@@ -52,20 +45,13 @@ final class Translator {
         if preferScript, !useBase, let scripted { return Translation(text: scripted) }
         let start = Date()
         do {
-            let out = try await complete(url: useBase ? base : tuned, mode: mode, user: mode.input(text))
-            // If a rewrite comes back as a read of her ("she's..."), use the rule-based cool line instead.
-            if mode == .cool, Self.readsLikeDecode(out) { return Translation(text: scripted ?? Fallback.line(.cool, text)) }
+            let out = try await complete(url: useBase ? base : tuned, mode: mode, user: text)
             let ms = Int(Date().timeIntervalSince(start) * 1000)
             return Translation(text: out, note: "\(useBase ? "base LFM2.5" : label) on this Mac, \(ms) ms")
         } catch {
             if useBase { return Translation(text: "(the base model isn't running)", note: "start it on SUBTEXT_BASE_URL") }
             return Translation(text: scripted ?? Fallback.line(mode, text))
         }
-    }
-
-    private static func readsLikeDecode(_ text: String) -> Bool {
-        let lower = " " + text.lowercased()
-        return [" she ", " she's", " she'", " her "].contains { lower.contains($0) }
     }
 
     private func complete(url: URL, mode: Mode, user: String) async throws -> String {

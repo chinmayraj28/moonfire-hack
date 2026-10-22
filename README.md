@@ -39,7 +39,7 @@ The real iMessage sounds play throughout: the soft blip when she texts, the whoo
 >
 > **He sent:** awesome, see you at 2pm?
 
-The model we trained uses one system prompt for both jobs (`Prompts.trained` in `Subtext/Translator.swift`, copied from the checkpoint's `run_local.py`). It tells the jobs apart by how a message looks, so the app sends his drafts in capitals, as in its rewrite examples, and falls back to a rule-based line if a rewrite comes back as a decode. `data/PROMPT.md` writes two-prompt data for the next run; if you retrain with it, update `Prompts.trained` to match.
+Each job has its own system prompt, word for word the same in the training data (`data/PROMPT.md`), the model's own `run_local.py`, and the app (`Prompts` in `Subtext/Translator.swift`). If you retrain with different prompts, change them there too.
 
 **Why fine-tune?** An untuned small model reads her text as a message to answer, not to decode. In our first test, one replied to the best-friend text with "Oh, I'm all ears! Let's plan a beach date! 😊". The fine-tuned model learns the job, the voice, and the hard rules: the cool version never drops a time or invents a fact.
 
@@ -131,7 +131,7 @@ Subtext/
   Views.swift        the Messages look: sidebar, floating header, bubbles, composer
   Shaders.metal      morph, shockwave and sheen
   ChatStore.swift    conversation state, the demo flow, interruptions
-  Translator.swift   the local model client and the trained system prompt
+  Translator.swift   the local model client and the two system prompts
   Her.swift          Sophie: the Claude prompt and her eight buried meanings
   Model.swift        conversations, scripted lines and decodes
   Sounds.swift       the iMessage sounds
