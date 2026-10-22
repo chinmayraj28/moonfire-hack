@@ -92,7 +92,13 @@ struct Avatar: View {
     var body: some View {
         ZStack {
             Circle().fill(LinearGradient(colors: conv.avatar, startPoint: .top, endPoint: .bottom))
-            if let emoji = conv.emoji {
+            if let name = conv.photo, let image = NSImage(named: name) {
+                Image(nsImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFill()
+                    .clipShape(Circle())
+            } else if let emoji = conv.emoji {
                 Text(emoji).font(.system(size: size * 0.48))
             } else {
                 Text(conv.initials)

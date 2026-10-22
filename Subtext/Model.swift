@@ -29,6 +29,7 @@ struct Conversation: Identifiable {
     var name: String
     var initials: String
     var emoji: String? = nil
+    var photo: String? = nil     // image name in the app bundle
     var avatar: [Color]
     var messages: [Message]
     var unread = false
@@ -125,7 +126,7 @@ enum Seed {
 
     static func conversations() -> [Conversation] {
         [
-            Conversation(id: herID, name: "Sophie", initials: "S",
+            Conversation(id: herID, name: "Sophie", initials: "S", photo: "sophie",
                          avatar: [Color(red: 1.0, green: 0.55, blue: 0.7), Color(red: 0.72, green: 0.35, blue: 0.95)],
                          messages: [
                             Message(fromMe: false, "had such a nice time tonight!! you're actually really easy to talk to haha", at: day(1, 21, 14),

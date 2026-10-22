@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1B2C1B57477D9626AB86E115 /* Translator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19A430C1EA2D2751CD5D6793 /* Translator.swift */; };
+		6C9D644F4D55D4DB8BF0DF52 /* sophie.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A95805942E79E205DCBA495B /* sophie.jpg */; };
 		7BA5243F06F8CD495E203317 /* SubtextApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F184A71FDEDA5278A9B1369B /* SubtextApp.swift */; };
 		7F98440537060020F09B8C54 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 41F0D24661748A5CA9F1248F /* Shaders.metal */; };
 		AF8E8BDE198107B40AD358EA /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1996AA47AA7AA836C6B7BC /* ChatStore.swift */; };
@@ -20,6 +21,7 @@
 		41F0D24661748A5CA9F1248F /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		43551C53895D953483B3EB32 /* Subtext.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Subtext.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5727B6C5575AC3133004739A /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
+		A95805942E79E205DCBA495B /* sophie.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = sophie.jpg; sourceTree = "<group>"; };
 		B1376983EF86B488C812A544 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		CC1996AA47AA7AA836C6B7BC /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 		DF73354D09176D9F194B1F4B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -43,6 +45,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6617AC2EB3A41E27125CCB5C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A95805942E79E205DCBA495B /* sophie.jpg */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		723124D5E8FF3B733B095521 /* Subtext */ = {
 			isa = PBXGroup;
 			children = (
@@ -53,6 +63,7 @@
 				F184A71FDEDA5278A9B1369B /* SubtextApp.swift */,
 				19A430C1EA2D2751CD5D6793 /* Translator.swift */,
 				5727B6C5575AC3133004739A /* Views.swift */,
+				6617AC2EB3A41E27125CCB5C /* Resources */,
 			);
 			path = Subtext;
 			sourceTree = "<group>";
@@ -65,6 +76,7 @@
 			buildConfigurationList = DB170B83283CAB9DDD5EC8F1 /* Build configuration list for PBXNativeTarget "Subtext" */;
 			buildPhases = (
 				FCB5B2E8BEF1DE65C967BB8C /* Sources */,
+				20B0348B8E1F07C4680103D3 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -109,6 +121,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		20B0348B8E1F07C4680103D3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6C9D644F4D55D4DB8BF0DF52 /* sophie.jpg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		FCB5B2E8BEF1DE65C967BB8C /* Sources */ = {
