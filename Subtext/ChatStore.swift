@@ -17,6 +17,7 @@ final class ChatStore {
     private var script = Seed.herScript
     private var interruptions = Seed.interruptions
     private var sentToHer = 0
+    private var epoch = 0   // bumped on reset, so replies still on their way are dropped
 
     // Most recent first, like Messages: whoever texted last goes to the top.
     var visibleConversations: [Conversation] {
@@ -38,9 +39,10 @@ final class ChatStore {
         guard !herTyping, !script.isEmpty else { return }
         let next = script.removeFirst()
         herTyping = true
+        let run = epoch
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(min(2.6, 1.0 + Double(next.text.count) * 0.012)))
-            land(next.text, scripted: next.decode)
+            land(next.text, scripted: next.decode, run: run)
         }
     }
 
@@ -49,32 +51,35 @@ final class ChatStore {
         guard !text.isEmpty, !herTyping else { return }
         draft = ""
         herTyping = true
+        let run = epoch
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(1.2))
-            land(text, scripted: nil)
+            land(text, scripted: nil, run: run)
         }
     }
 
-    // She answers his last text straight away: Gemini writes it live, or the next scripted line if it can't.
+    // She answers his last text straight away: Claude writes it live, or the next scripted line if it can't.
     private func herRespond() {
         guard autoReply, !herTyping else { return }
         herTyping = true
+        let run = epoch
         Task { @MainActor in
             let start = Date.now
             if let reply = await her.reply(to: conversation(Seed.herID)?.messages ?? []) {
                 try? await Task.sleep(for: .seconds(max(0, 0.8 - Date.now.timeIntervalSince(start))))
-                land(reply.text, scripted: reply.decode)
-            } else if !script.isEmpty {
+                land(reply.text, scripted: reply.decode, run: run)
+            } else if run == epoch, !script.isEmpty {
                 let next = script.removeFirst()
                 try? await Task.sleep(for: .seconds(1.2))
-                land(next.text, scripted: next.decode)
-            } else {
+                land(next.text, scripted: next.decode, run: run)
+            } else if run == epoch {
                 herTyping = false
             }
         }
     }
 
-    private func land(_ text: String, scripted: String?) {
+    private func land(_ text: String, scripted: String?, run: Int) {
+        guard run == epoch else { return }
         herTyping = false
         withAnimation(.snappy) { append(Message(fromMe: false, text, at: .now, scripted: scripted), to: Seed.herID) }
         (selectedID == Seed.herID ? Sounds.received : Sounds.notification).play()
@@ -86,8 +91,10 @@ final class ChatStore {
     private func interrupt() {
         guard !interruptions.isEmpty else { return }
         let next = interruptions.removeFirst()
+        let run = epoch
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(2.2))
+            guard run == epoch else { return }
             withAnimation(.snappy) {
                 append(Message(fromMe: false, next.text, at: .now, scripted: next.decode), to: next.convID)
             }
@@ -108,10 +115,13 @@ final class ChatStore {
 
         sentToHer += 1
         if sentToHer % 2 == 0 { interrupt() }
+        let run = epoch
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(450))
+            guard run == epoch else { return }
             tap(message.id, in: convID)
             while fx[message.id] != nil { try? await Task.sleep(for: .milliseconds(100)) }
+            guard run == epoch else { return }
             herRespond()
         }
     }
@@ -189,6 +199,8 @@ final class ChatStore {
     // MARK: Housekeeping
 
     func reset() {
+        epoch += 1
+        ripple = nil
         conversations = Seed.conversations()
         script = Seed.herScript
         interruptions = Seed.interruptions

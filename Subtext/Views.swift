@@ -127,6 +127,8 @@ struct ChatView: View {
             .navigationTitle("")
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
+                    Button { store.reset() } label: { Image(systemName: "arrow.counterclockwise") }
+                        .help("Reset the demo (⌘⇧R)")
                     Button {} label: { Image(systemName: "video") }
                     Button {} label: { Image(systemName: "info.circle") }
                 }
