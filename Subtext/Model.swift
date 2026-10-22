@@ -138,32 +138,32 @@ enum Seed {
                             Message(fromMe: true, "Haha yes I put aloe on, thank you so much for caring!! Honestly today was perfect and the sunburn was 100% worth it. When can I see you again? Tomorrow? Tonight?", at: ago(minutes: 186),
                                     alt: "worth it tbh 🌊", showingAlt: true),
                          ]),
-            Conversation(id: "mum", name: "Mum", initials: "M", avatar: grey, messages: [
+            Conversation(id: "mum", name: "Mum", initials: "M", photo: "mum", avatar: grey, messages: [
                 Message(fromMe: false, "Did you eat today?", at: day(1, 8, 12)),
                 Message(fromMe: false, "Also who is Sophie?? Your sister showed me her Instagram. She looks lovely. Bring her to Sunday lunch x", at: ago(minutes: 75)),
             ]),
-            Conversation(id: "ex", name: "DO NOT TEXT", initials: "", emoji: "🚩",
+            Conversation(id: "ex", name: "DO NOT TEXT", initials: "", emoji: "🚩", photo: "ex",
                          avatar: [Color(red: 1.0, green: 0.42, blue: 0.4), Color(red: 0.85, green: 0.2, blue: 0.25)], messages: [
                 Message(fromMe: false, "hey stranger 👀 saw you at the beach today", at: ago(minutes: 140)),
             ]),
-            Conversation(id: "lads", name: "The Lads", initials: "", emoji: "🍻",
+            Conversation(id: "lads", name: "The Lads", initials: "", emoji: "🍻", photo: "lads",
                          avatar: [Color(red: 0.98, green: 0.8, blue: 0.35), Color(red: 0.95, green: 0.6, blue: 0.2)], messages: [
                 Message(fromMe: false, "who's in for five-a-side thursday", at: day(1, 18, 2)),
                 Message(fromMe: false, "bro you've gone quiet since you met this girl 💀", at: ago(minutes: 220)),
             ]),
-            Conversation(id: "landlord", name: "Gary (Landlord)", initials: "G", avatar: grey, messages: [
+            Conversation(id: "landlord", name: "Gary (Landlord)", initials: "G", photo: "landlord", avatar: grey, messages: [
                 Message(fromMe: false, "Hi mate, boiler's out again. Cold showers till Tuesday, character building 👍", at: day(1, 11, 40)),
             ]),
-            Conversation(id: "bank", name: "Bank", initials: "B", avatar: grey, messages: [
+            Conversation(id: "bank", name: "Bank", initials: "B", photo: "bank", avatar: grey, messages: [
                 Message(fromMe: false, "Your balance is £4.20. Have you considered a meal deal?", at: day(2, 9, 30)),
             ]),
-            Conversation(id: "gym", name: "Gym", initials: "G", avatar: grey, messages: [
+            Conversation(id: "gym", name: "Gym", initials: "G", photo: "gym", avatar: grey, messages: [
                 Message(fromMe: false, "We miss you! It's been 47 days 🥺 Come back, the treadmill asks about you.", at: day(2, 7, 0)),
             ]),
-            Conversation(id: "app", name: "Dating App", initials: "D", avatar: grey, messages: [
+            Conversation(id: "app", name: "Dating App", initials: "D", photo: "app", avatar: grey, messages: [
                 Message(fromMe: false, "You have 0 new likes. Good thing you met Sophie.", at: day(3, 20, 15)),
             ]),
-            Conversation(id: "grandma", name: "Grandma", initials: "G", avatar: grey, messages: [
+            Conversation(id: "grandma", name: "Grandma", initials: "G", photo: "grandma", avatar: grey, messages: [
                 Message(fromMe: false, "HOW DO I TURN OFF THE CAPITALS. ALSO WHO IS SOPHIE", at: day(4, 16, 5)),
             ]),
         ]

@@ -27,7 +27,21 @@ targets:
         CODE_SIGN_IDENTITY: "-"
         CODE_SIGN_STYLE: Manual
         ENABLE_HARDENED_RUNTIME: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
         MTL_FAST_MATH: YES
+    postBuildScripts:
+      - name: Copy iMessage sounds from this Mac
+        basedOnDependencyAnalysis: false
+        script: |
+          # Apple's own sounds are copied from this Mac at build time, never committed.
+          dest="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH"
+          ui=$(ls -d /Library/Developer/CoreSimulator/Volumes/*/Library/Developer/CoreSimulator/Profiles/Runtimes/*.simruntime/Contents/Resources/RuntimeRoot/System/Library/Audio/UISounds 2>/dev/null | tail -1)
+          for f in ReceivedMessage.caf SentMessage.caf sms-received1.caf; do
+            if [ -n "$ui" ] && [ -f "$ui/$f" ]; then cp "$ui/$f" "$dest/"; fi
+          done
+          mac=/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/SentMessage.caf
+          if [ ! -f "$dest/SentMessage.caf" ] && [ -f "$mac" ]; then cp "$mac" "$dest/"; fi
+          exit 0
     scheme:
       environmentVariables:
         SUBTEXT_URL: http://127.0.0.1:8080/v1/chat/completions

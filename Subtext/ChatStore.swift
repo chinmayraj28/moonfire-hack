@@ -53,7 +53,7 @@ final class ChatStore {
             try? await Task.sleep(for: .seconds(delay))
             herTyping = false
             append(Message(fromMe: false, text, at: .now, scripted: scripted), to: Seed.herID)
-            NSSound(named: "Pop")?.play()
+            (selectedID == Seed.herID ? Sounds.received : Sounds.notification).play()
         }
     }
 
@@ -65,6 +65,7 @@ final class ChatStore {
         draft = ""
         let message = Message(fromMe: true, text, at: .now)
         append(message, to: convID)
+        Sounds.sent.play()
         guard convID == Seed.herID else { return }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(450))
