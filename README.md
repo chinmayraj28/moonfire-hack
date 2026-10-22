@@ -43,6 +43,10 @@ The model we trained uses one system prompt for both jobs (`Prompts.trained` in 
 
 **Why fine-tune?** An untuned small model reads her text as a message to answer, not to decode. In our first test, one replied to the best-friend text with "Oh, I'm all ears! Let's plan a beach date! 😊". The fine-tuned model learns the job, the voice, and the hard rules: the cool version never drops a time or invents a fact.
 
+**Running live.** Here's our fine-tuned LFM2.5 on a MacBook, decoding Sophie's "hope you put aloe on it" in 745 ms. The caption under the bubble shows which model answered and how long it took.
+
+![The fine-tuned model live in Subtext: Sophie's aloe text decoded into a purple bubble, captioned "fine-tuned LFM2.5 on this Mac, 745 ms"](docs/live-decode.webp)
+
 ## How it fits together
 
 ```mermaid
