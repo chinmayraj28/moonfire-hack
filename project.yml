@@ -1,0 +1,34 @@
+name: Subtext
+options:
+  bundleIdPrefix: com.owenbarnes
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+targets:
+  Subtext:
+    type: application
+    platform: macOS
+    sources:
+      - Subtext
+    info:
+      path: Subtext/Info.plist
+      properties:
+        CFBundleDisplayName: Subtext
+        CFBundleShortVersionString: "1.0"
+        LSApplicationCategoryType: public.app-category.social-networking
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.owenbarnes.subtext
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: NO
+        MTL_FAST_MATH: YES
+    scheme:
+      environmentVariables:
+        SUBTEXT_URL: http://127.0.0.1:8080/v1/chat/completions
+        SUBTEXT_BASE_URL: http://127.0.0.1:8081/v1/chat/completions
