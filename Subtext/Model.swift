@@ -44,6 +44,13 @@ struct Scripted {
     let decode: String
 }
 
+// A text from someone else that lands while he's busy with Sophie.
+struct Interruption {
+    let convID: String
+    let text: String
+    let decode: String
+}
+
 // One running decode or cool transition.
 struct FX {
     var start: Date
@@ -51,13 +58,22 @@ struct FX {
     var toAlt: Bool
     var tint: Color
 
-    static let rampIn = 0.45
-    static let rampOut = 0.6
+    static let charge = 0.18   // tremble and glow before the burst
+    static let rampIn = 0.55   // fully blown apart; the text swaps here
+    static let rampOut = 0.95  // reassemble while the new text decrypts
+}
+
+// The shockwave that rolls through the chat from a decode click.
+struct Ripple {
+    var origin: CGPoint
+    var start: Date
 }
 
 struct FXState {
     var progress = 0.0
     var time = 0.0
+    var reveal = 1.0
+    var shake = 0.0
     var showAlt: Bool
 
     init(_ fx: FX?, now: Date, showingAlt: Bool) {
@@ -65,15 +81,35 @@ struct FXState {
         time = now.timeIntervalSince(fx.start)
         if let swap = fx.swapAt, now >= swap {
             showAlt = fx.toAlt
-            progress = 1 - Self.ease(min(1, now.timeIntervalSince(swap) / FX.rampOut))
+            let t = min(1, now.timeIntervalSince(swap) / FX.rampOut)
+            progress = 1 - Self.ease(t)
+            reveal = t
         } else {
             showAlt = showingAlt
-            // Ramp in, then shimmer near the peak while the model thinks.
-            progress = time < FX.rampIn ? Self.ease(time / FX.rampIn) : 0.9 + 0.1 * sin((time - FX.rampIn) * 9)
+            if time < FX.charge {
+                shake = time / FX.charge
+            } else if time < FX.rampIn {
+                progress = Self.ease((time - FX.charge) / (FX.rampIn - FX.charge))
+            } else {
+                progress = 0.92 + 0.08 * sin((time - FX.rampIn) * 7)   // hover while the model thinks
+            }
         }
     }
 
     static func ease(_ t: Double) -> Double { t < 0.5 ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2 }
+}
+
+// Hacker-film decryption: unrevealed characters flicker through random glyphs.
+enum Scramble {
+    static let glyphs = Array("!<>_/[]{}=+*^?#%&@$ABCDEFGHJKLMNPQRSTUVWXYZ0123456789")
+
+    static func text(_ target: String, revealed: Double, seed: Int) -> String {
+        let chars = Array(target)
+        let shown = Int(Double(chars.count) * revealed)
+        return String(chars.enumerated().map { i, c in
+            i < shown || c.isWhitespace ? c : glyphs[abs((i &* 7919) ^ (seed &* 104_729)) % glyphs.count]
+        })
+    }
 }
 
 enum Fmt {
@@ -124,6 +160,30 @@ enum Seed {
                  decode: "Oh no. What did you do."),
     ]
 
+    // Fired after every second text he sends Sophie, in this order.
+    static let interruptions: [Interruption] = [
+        Interruption(convID: "lads", text: "lads it's jake's birthday saturday. mandatory. no girlfriends. sorry not sorry 🍻",
+                     decode: "Saturday is now a war between the lads and Sophie. Choose wisely. Choose Sophie."),
+        Interruption(convID: "grandma", text: "IS SOPHIE COMING TO SUNDAY LUNCH. I HAVE MADE A TRIFLE. DO NOT TELL YOUR MOTHER",
+                     decode: "Grandma has already planned the wedding. The trifle is a power move."),
+        Interruption(convID: "ex", text: "u up? 👀",
+                     decode: "Absolutely not. Put the phone face down. Sophie is RIGHT THERE."),
+        Interruption(convID: "mum", text: "Your grandma says Sophie's coming for Sunday lunch?? Nobody tells me anything x",
+                     decode: "Mum is hurt that Grandma knew first. Call her before this becomes a family feud."),
+        Interruption(convID: "landlord", text: "Rent's due Friday mate. Also the boiler's now making a noise like a goose. Don't touch it.",
+                     decode: "Do not invite Sophie round until the goose situation is resolved."),
+        Interruption(convID: "bank", text: "Payment declined: £34.99 at a florist. Love is expensive, mate.",
+                     decode: "The flowers didn't go through. Neither will your rent. Pick one."),
+        Interruption(convID: "lads", text: "bro has she let you out yet or are we sending a search party 💀",
+                     decode: "The lads feel abandoned. Send one voice note to keep them alive."),
+        Interruption(convID: "gym", text: "Saw you walk past today. We waved. You didn't wave back 💔",
+                     decode: "The gym is grieving. Ignore it, you've got a date to get ready for."),
+        Interruption(convID: "grandma", text: "SOPHIE ADDED ME ON FACEBOOK. LOVELY GIRL. WHY DO YOU NEVER ADD ME",
+                     decode: "Sophie is now closer to your grandma than you are. This is a green flag."),
+        Interruption(convID: "app", text: "Someone new liked you! Just kidding. You're taken, delete us 💀",
+                     decode: "Even the app knows. Delete it while Sophie's watching."),
+    ]
+
     static func conversations() -> [Conversation] {
         [
             Conversation(id: herID, name: "Sophie", initials: "S", photo: "sophie",
@@ -133,9 +193,9 @@ enum Seed {
                                     scripted: "She's into you. 'Actually' means she expected you to be weird and you weren't. Keep it that way, king."),
                             Message(fromMe: true, "Same!!! Honestly best night I've had in years. I already told my mum about you and I've been smiling at my phone like an idiot 😭", at: day(1, 21, 16),
                                     alt: "same, had a really good time 😊", showingAlt: true),
-                            Message(fromMe: false, "omg today was so fun. also you got SO sunburnt 😂 hope you put aloe on it", at: ago(minutes: 190),
+                            Message(fromMe: false, "omg today was so fun. also you got SO sunburnt 😂 hope you put aloe on it", at: ago(minutes: 24),
                                     scripted: "She's flirting via light bullying. The aloe thing means she thinks about you when you're not around. Green flag."),
-                            Message(fromMe: true, "Haha yes I put aloe on, thank you so much for caring!! Honestly today was perfect and the sunburn was 100% worth it. When can I see you again? Tomorrow? Tonight?", at: ago(minutes: 186),
+                            Message(fromMe: true, "Haha yes I put aloe on, thank you so much for caring!! Honestly today was perfect and the sunburn was 100% worth it. When can I see you again? Tomorrow? Tonight?", at: ago(minutes: 21),
                                     alt: "worth it tbh 🌊", showingAlt: true),
                          ]),
             Conversation(id: "mum", name: "Mum", initials: "M", photo: "mum", avatar: grey, messages: [

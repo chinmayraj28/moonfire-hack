@@ -16,9 +16,22 @@ Open `Subtext.xcodeproj` and press ⌘R (macOS 14 or later). Xcode needs its Met
 | Type, then ⌥↩ | Sends your draft **as her**: let a judge write one live |
 | ⌥-click her bubble | Asks the **base** model instead, for the side-by-side |
 | ⌘⇧S | Prefer scripted lines (safe mode if the model misbehaves) |
+| Demo › She Replies Automatically | On by default: she answers each text you send |
 | ⌘⇧R | Reset the demo |
 
-Launch with `-autoplay` to rehearse the opening beat hands-free.
+After every second text you send Sophie, someone else (the Lads, Grandma, the ex...) texts too: their chat jumps up the list with the tri-tone, and Sophie stays open.
+
+Launch with `-autoplay` (add `-reply`) to rehearse hands-free. Decoding always waits for a click.
+
+## Her live replies (Gemini)
+
+When you text Sophie, Gemini writes her reply straight away: a long, over-explained message with one real meaning buried in it. The prompt and the eight buried meanings are in `Subtext/Her.swift`. Add your key once; it stays on this Mac, never in git:
+
+```bash
+defaults write com.owenbarnes.subtext GeminiAPIKey 'YOUR_KEY'
+```
+
+It uses `gemini-3.5-flash-lite` (Google's fastest). Change it with `defaults write com.owenbarnes.subtext SubtextHerModel 'gemini-3.8-flash'`. With no key, she sends the next scripted line instead. Gemini only plays the girlfriend; decoding and playing it cool stay on the local model.
 
 ## Connect the models
 

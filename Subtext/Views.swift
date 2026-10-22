@@ -67,8 +67,8 @@ struct ConversationRow: View {
         HStack(alignment: .top, spacing: 8) {
             Circle().fill(conv.unread ? Theme.unread : .clear)
                 .frame(width: 8, height: 8)
-                .padding(.top, 17)
-            Avatar(conv: conv, size: 40)
+                .padding(.top, 20)
+            Avatar(conv: conv, size: 46)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(conv.name).font(.system(size: 13, weight: .semibold)).lineLimit(1)
@@ -120,17 +120,12 @@ struct ChatView: View {
         if let conv = store.conversation(convID) {
             VStack(spacing: 0) {
                 transcript(conv)
+                    .overlay(alignment: .top) { ChatHeader(conv: conv) }
                 Composer()
             }
             .background(Color(nsColor: .textBackgroundColor))
             .navigationTitle("")
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 7) {
-                        Avatar(conv: conv, size: 22)
-                        Text(conv.name).font(.system(size: 13, weight: .semibold))
-                    }
-                }
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button {} label: { Image(systemName: "video") }
                     Button {} label: { Image(systemName: "info.circle") }
@@ -144,31 +139,35 @@ struct ChatView: View {
         let lastMine = messages.lastIndex { $0.fromMe }
         return ScrollViewReader { proxy in
             ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(Array(messages.enumerated()), id: \.element.id) { i, m in
-                        let newGroup = i == 0 || messages[i - 1].fromMe != m.fromMe
-                        let header = i == 0 || m.time.timeIntervalSince(messages[i - 1].time) > 3600
-                        let tail = i == messages.count - 1 || messages[i + 1].fromMe != m.fromMe
-                            || messages[i + 1].time.timeIntervalSince(m.time) > 3600
-                        if header {
-                            Text(Fmt.headerTime(m.time))
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.secondary)
-                                .padding(.top, 14)
-                                .padding(.bottom, 6)
+                TimelineView(.animation(minimumInterval: nil, paused: store.ripple == nil)) { timeline in
+                    VStack(spacing: 0) {
+                        ForEach(Array(messages.enumerated()), id: \.element.id) { i, m in
+                            let newGroup = i == 0 || messages[i - 1].fromMe != m.fromMe
+                            let header = i == 0 || m.time.timeIntervalSince(messages[i - 1].time) > 3600
+                            let tail = i == messages.count - 1 || messages[i + 1].fromMe != m.fromMe
+                                || messages[i + 1].time.timeIntervalSince(m.time) > 3600
+                            if header {
+                                Text(Fmt.headerTime(m.time))
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.top, 14)
+                                    .padding(.bottom, 6)
+                            }
+                            MessageRow(message: m, convID: conv.id, tail: tail, herChat: conv.id == Seed.herID,
+                                       delivered: i == lastMine && i == messages.count - 1)
+                                .padding(.top, newGroup && !header ? 10 : 2)
+                                .id(m.id)
                         }
-                        MessageRow(message: m, convID: conv.id, tail: tail, herChat: conv.id == Seed.herID,
-                                   delivered: i == lastMine && i == messages.count - 1)
-                            .padding(.top, newGroup && !header ? 10 : 2)
-                            .id(m.id)
+                        if store.herTyping && conv.id == Seed.herID {
+                            TypingBubble().padding(.top, 8)
+                        }
+                        Color.clear.frame(height: 10).id("bottom")
                     }
-                    if store.herTyping && conv.id == Seed.herID {
-                        TypingBubble().padding(.top, 8)
-                    }
-                    Color.clear.frame(height: 10).id("bottom")
+                    .padding(.horizontal, 16)
+                    .padding(.top, ChatHeader.height)
+                    .coordinateSpace(.named("chat"))
+                    .modifier(RippleEffect(ripple: store.ripple, now: timeline.date))
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 6)
             }
             .onAppear { proxy.scrollTo("bottom", anchor: .bottom) }
             .onChange(of: messages.count) { withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("bottom", anchor: .bottom) } }
@@ -178,7 +177,38 @@ struct ChatView: View {
     }
 }
 
+// The big photo and name pill that float over the top of the chat, as in Messages.
+struct ChatHeader: View {
+    static let height: CGFloat = 112
+    let conv: Conversation
+
+    var body: some View {
+        let background = Color(nsColor: .textBackgroundColor)
+        VStack(spacing: -5) {
+            Avatar(conv: conv, size: 68)
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 2)
+            HStack(spacing: 4) {
+                Text(conv.name).font(.system(size: 14, weight: .semibold))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 13)
+            .padding(.vertical, 5)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().strokeBorder(Color.white.opacity(0.1)))
+        }
+        .padding(.top, 8)
+        .padding(.bottom, 16)
+        .frame(maxWidth: .infinity)
+        .background(LinearGradient(colors: [background, background.opacity(0.92), background.opacity(0)],
+                                   startPoint: .top, endPoint: .bottom))
+        .allowsHitTesting(false)
+    }
+}
+
 struct MessageRow: View {
+    static let burst: CGFloat = 135   // transparent room around a bubble for its fragments to fly into
     @Environment(ChatStore.self) private var store
     let message: Message
     let convID: String
@@ -194,14 +224,22 @@ struct MessageRow: View {
                 TimelineView(.animation(minimumInterval: nil, paused: fx == nil)) { timeline in
                     let state = FXState(fx, now: timeline.date, showingAlt: message.showingAlt)
                     let style = bubbleStyle(alt: state.showAlt)
-                    BubbleView(text: state.showAlt ? (message.alt ?? message.text) : message.text,
+                    let full = state.showAlt ? (message.alt ?? message.text) : message.text
+                    let tint = fx?.tint ?? .clear
+                    let glow = max(state.progress, state.shake * 0.6)
+                    BubbleView(text: state.reveal < 1 ? Scramble.text(full, revealed: state.reveal, seed: Int(state.time * 24)) : full,
                                fill: style.fill, textColor: style.text, fromMe: message.fromMe, tail: tail)
                         .modifier(SheenEffect(on: state.showAlt && !message.fromMe && !message.altIsBase && fx == nil))
-                        .modifier(DecodeEffect(progress: state.progress, time: state.time, tint: fx?.tint ?? .clear))
+                        .padding(Self.burst)
+                        .modifier(ShatterEffect(progress: state.progress, time: state.time, tint: tint))
+                        .shadow(color: tint.opacity(0.85 * glow), radius: 22 * glow)
+                        .padding(-Self.burst)
+                        .offset(x: sin(state.time * 95) * 3 * state.shake)
+                        .scaleEffect(1 + 0.04 * glow)
                 }
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    store.tap(message.id, in: convID, useBase: NSEvent.modifierFlags.contains(.option))
+                .onTapGesture(coordinateSpace: .named("chat")) { location in
+                    store.tap(message.id, in: convID, useBase: NSEvent.modifierFlags.contains(.option), at: location)
                 }
                 if !message.fromMe { Spacer(minLength: 110) }
             }
@@ -349,7 +387,7 @@ struct Composer: View {
 
 // MARK: Metal effects
 
-struct DecodeEffect: ViewModifier {
+struct ShatterEffect: ViewModifier {
     var progress: Double
     var time: Double
     var tint: Color
@@ -357,10 +395,24 @@ struct DecodeEffect: ViewModifier {
     func body(content: Content) -> some View {
         content.visualEffect { view, proxy in
             view.layerEffect(
-                ShaderLibrary.subtextDecode(.float2(proxy.size), .float(progress), .float(time), .color(tint)),
-                maxSampleOffset: CGSize(width: 28, height: 8),
+                ShaderLibrary.subtextShatter(.float2(proxy.size), .float(progress), .float(time), .color(tint)),
+                maxSampleOffset: CGSize(width: 130, height: 130),
                 isEnabled: progress > 0.001)
         }
+    }
+}
+
+struct RippleEffect: ViewModifier {
+    var ripple: Ripple?
+    var now: Date
+
+    func body(content: Content) -> some View {
+        let t = ripple.map { now.timeIntervalSince($0.start) } ?? 0
+        content.layerEffect(
+            ShaderLibrary.subtextRipple(.float2(ripple?.origin ?? .zero), .float(t), .float(14), .float(15),
+                                        .float(5.5), .float(1100), .color(Theme.decodeTint)),
+            maxSampleOffset: CGSize(width: 20, height: 20),
+            isEnabled: ripple != nil && t < 1.8)
     }
 }
 

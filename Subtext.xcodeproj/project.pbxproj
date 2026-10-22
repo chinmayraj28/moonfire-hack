@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1B2C1B57477D9626AB86E115 /* Translator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19A430C1EA2D2751CD5D6793 /* Translator.swift */; };
+		1E22DCC84A0EF0702D5240DA /* Her.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7B538B4AA0C03C9F260811 /* Her.swift */; };
 		231CABD5CD8A69247B756EB0 /* Sounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98FA955F72EA230C643EF67F /* Sounds.swift */; };
 		2A79CF0DE07ACC685BEE9D27 /* gym.jpg in Resources */ = {isa = PBXBuildFile; fileRef = FFE8F903A721B4D097218F53 /* gym.jpg */; };
 		2CDB73F3798E4BAC3F7A2B29 /* ex.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 10EC60552A28640082991E14 /* ex.jpg */; };
@@ -17,6 +18,7 @@
 		7806CFB90D2D2F25370DF54B /* bank.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 989AE9E4A6DEB4E4074E0577 /* bank.jpg */; };
 		7BA5243F06F8CD495E203317 /* SubtextApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F184A71FDEDA5278A9B1369B /* SubtextApp.swift */; };
 		7F98440537060020F09B8C54 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 41F0D24661748A5CA9F1248F /* Shaders.metal */; };
+		801E5F022117DCD51F7FB2DF /* FXPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 718FCBE5DF2A41F9C8C60F8F /* FXPreview.swift */; };
 		AF8E8BDE198107B40AD358EA /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1996AA47AA7AA836C6B7BC /* ChatStore.swift */; };
 		BF10993FDC78D8C590975A08 /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5727B6C5575AC3133004739A /* Views.swift */; };
 		CFB6304F9E75F72F270D63AD /* grandma.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 98C777078DCBA0DFE7930B90 /* grandma.jpg */; };
@@ -35,11 +37,13 @@
 		43551C53895D953483B3EB32 /* Subtext.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Subtext.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FEE2251F92A85B85A3F13A2 /* lads.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = lads.jpg; sourceTree = "<group>"; };
 		5727B6C5575AC3133004739A /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
+		718FCBE5DF2A41F9C8C60F8F /* FXPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FXPreview.swift; sourceTree = "<group>"; };
 		989AE9E4A6DEB4E4074E0577 /* bank.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = bank.jpg; sourceTree = "<group>"; };
 		98C777078DCBA0DFE7930B90 /* grandma.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grandma.jpg; sourceTree = "<group>"; };
 		98FA955F72EA230C643EF67F /* Sounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sounds.swift; sourceTree = "<group>"; };
 		A95805942E79E205DCBA495B /* sophie.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = sophie.jpg; sourceTree = "<group>"; };
 		B1376983EF86B488C812A544 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
+		BC7B538B4AA0C03C9F260811 /* Her.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Her.swift; sourceTree = "<group>"; };
 		CC1996AA47AA7AA836C6B7BC /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 		DF73354D09176D9F194B1F4B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F184A71FDEDA5278A9B1369B /* SubtextApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextApp.swift; sourceTree = "<group>"; };
@@ -83,6 +87,8 @@
 			isa = PBXGroup;
 			children = (
 				CC1996AA47AA7AA836C6B7BC /* ChatStore.swift */,
+				718FCBE5DF2A41F9C8C60F8F /* FXPreview.swift */,
+				BC7B538B4AA0C03C9F260811 /* Her.swift */,
 				DF73354D09176D9F194B1F4B /* Info.plist */,
 				B1376983EF86B488C812A544 /* Model.swift */,
 				41F0D24661748A5CA9F1248F /* Shaders.metal */,
@@ -197,6 +203,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				AF8E8BDE198107B40AD358EA /* ChatStore.swift in Sources */,
+				801E5F022117DCD51F7FB2DF /* FXPreview.swift in Sources */,
+				1E22DCC84A0EF0702D5240DA /* Her.swift in Sources */,
 				D9D9D9F460B9D383567397F3 /* Model.swift in Sources */,
 				7F98440537060020F09B8C54 /* Shaders.metal in Sources */,
 				231CABD5CD8A69247B756EB0 /* Sounds.swift in Sources */,
