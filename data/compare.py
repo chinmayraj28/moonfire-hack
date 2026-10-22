@@ -40,8 +40,8 @@ def score(cool, user, out):
     words = len(out.split())
     if cool:
         times_kept = all(t.lower().replace(" ", "") in out.lower().replace(" ", "") for t in TIME.findall(user))
-        return words <= 12 and times_kept
-    return 8 <= words <= 35
+        return words <= 10 and "!" not in out and times_kept
+    return 6 <= words <= 25
 
 
 rows = [json.loads(l) for l in (here / "eval.jsonl").read_text().splitlines() if l.strip()]
@@ -58,7 +58,7 @@ for row in rows:
     lines.append(f"| {cell(user)} | {cell(base)} | {cell(tuned)} | {cell(target)} |")
 
 summary = ["# Base vs fine-tuned", "",
-           "Pass rule: cool rewrites are 12 words or fewer and keep every time; decodes are 8 to 35 words.", "",
+           "Pass rule: cool rewrites are 10 words or fewer, no exclamation marks, every time kept; decodes are 6 to 25 words.", "",
            "| Model | Decode passes | Cool passes | Median latency |", "|---|---|---|---|"]
 for name, res in results.items():
     for_mode = lambda c: [ok for is_cool, ok, _ in res if is_cool == c]

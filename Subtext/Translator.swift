@@ -12,7 +12,7 @@ enum Mode {
     case decode, cool
 
     var system: String { self == .decode ? Prompts.decode : Prompts.cool }
-    var temperature: Double { self == .decode ? 0.8 : 0.3 }
+    var temperature: Double { self == .decode ? 0.5 : 0.3 }
 }
 
 struct Translation {

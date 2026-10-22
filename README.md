@@ -114,10 +114,15 @@ Logs go to `logs/`. Ports and labels can be overridden in the Xcode scheme (Edit
 
 ## Training data and evaluation
 
-1. **Write the data.** `data/PROMPT.md` is a prompt for any strong LLM, with 40 themes from "meeting her parents" to "'k'". Run it once per theme and save each reply to `data/raw/batch-NN.jsonl`. Forty runs of 50 lines gives about 2,000 examples.
-2. **Check it.** `python3 data/check.py` drops malformed lines, cool rewrites over 12 words, cool rewrites that lose a time, and duplicates. It then writes `data/train.jsonl` and a held-out `data/eval.jsonl`.
-3. **Train.** Halo SFT on `data/train.jsonl`. Records use Halo's default `prompt` column. Set `assistant_message_template: "<|im_start|>assistant\n"`, which matches LFM2.5's chat template, so only the answers are trained.
-4. **Compare.** With both models served, `python3 data/compare.py` runs the held-out set through base and fine-tuned, and writes `data/compare.md`: pass rates, median latency and a side-by-side table for the slides.
+1. **Write the data.** `uv run --with anthropic python3 data/generate.py` writes about 800 examples in parallel with Claude, from the prompt and 40 themes in `data/PROMPT.md` (blunt "what she really means" reveals with a kicker; laid-back two-to-nine-word rewrites).
+2. **Check it.** `python3 data/check.py --eval 80` drops malformed lines, long decodes, cool rewrites over 10 words, with an exclamation mark or that lose a time, and duplicates, then writes `data/train.jsonl` and a held-out `data/eval.jsonl`.
+3. **Train without memorising.** Our first run did 3 passes over 400 examples: training loss fell to 0.1 while held-out loss stayed at 2.3, so it recited its examples. Instead:
+   - Halo SFT on `data/train.jsonl`, `data/eval.jsonl` as the eval set, records in Halo's default `prompt` column.
+   - `assistant_message_template: "<|im_start|>assistant\n"` (matches LFM2.5's chat template), so only the answers are trained.
+   - **1 epoch** (2 at most), learning rate 1e-5 to 2e-5 with warmup, batch 16.
+   - Evaluate and save every 10 steps; ship the checkpoint with the **lowest eval loss**, not the last one. A training loss near 0.1 means it's memorising.
+4. **Ship it.** Drop the checkpoint into `Models/`; the app's prompts (`Prompts` in `Subtext/Translator.swift`) must match the ones in `data/PROMPT.md`.
+5. **Compare.** With both models served, `python3 data/compare.py` runs the held-out set through base and fine-tuned and writes `data/compare.md` for the slides.
 
 The data rules keep it funny without being nasty:
 - The joke is always on him, never on her.
